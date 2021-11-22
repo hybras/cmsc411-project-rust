@@ -1,9 +1,17 @@
 pub mod instr;
+use crate::instr::Instruction;
 
-use std::{collections::HashMap, fs::File, io::{BufRead, BufReader, BufWriter}, path::PathBuf};
+use std::convert::TryFrom;
+use std::{
+    collections::HashMap,
+    fs::File,
+    io::{BufRead, BufReader, BufWriter, Write},
+    path::PathBuf,
+};
 
-use argh::FromArgs;
 use anyhow::Result;
+use argh::FromArgs;
+use instr::{MathFunc, OpCode};
 
 /// error: usage: %s <assembly-code-file> <machine-code-file>
 #[derive(FromArgs)]
@@ -16,31 +24,105 @@ struct Args {
     output: PathBuf,
 }
 
-fn main() -> Result<()> {
-    let Args {input, output} = argh::from_env::<Args>();
-    let input = File::open(input)?;
-    let output = File::open(output)?;
-    let output = BufWriter::new(output);
-    
-    // First Pass
-    let labels = get_labels(&input);
+type Labels = HashMap<String, u16>;
 
+fn main() -> Result<()> {
+    let Args {
+        input: input_path,
+        output,
+    } = argh::from_env::<Args>();
+    let input = File::open(&input_path)?;
+    let output = File::create(output)?;
+    let mut output = BufWriter::new(output);
+
+    // First Pass
+    let labels = dbg!(get_labels(&input));
+    let input = File::open(&input_path)?;
+    write_instructions(&input, &mut output, &labels)?;
     Ok(())
 }
 
-fn get_labels(input: &File) -> HashMap::<String, u32> {
+fn get_labels(input: &File) -> Labels {
     let input = BufReader::new(input);
     input
-    .lines()
-    .enumerate()
+        .lines()
+        .enumerate()
         .filter_map(|(line_num, line)| {
             let line = line.unwrap();
-            let is_labeled = line.starts_with("\t");
+            let is_labeled = !line.starts_with("\t");
             if is_labeled {
-                Some((line.split_once("\t").unwrap().0.to_owned(), (line_num as u32) << 4))
+                Some((
+                    line.split_once("\t").unwrap().0.to_owned(),
+                    (line_num * 4) as u16,
+                ))
             } else {
                 None
             }
         })
         .collect()
+}
+
+fn lookahead(line: &str) -> (&str, &str, impl Iterator<Item = &str>) {
+    let mut toks = line.split("\t");
+    (toks.next().unwrap(), toks.next().unwrap(), toks)
+}
+
+fn write_instructions(input: &File, output: &mut BufWriter<File>, labels: &Labels) -> Result<()> {
+    let input = BufReader::new(input);
+    for (line_num, line) in input.lines().enumerate() {
+        let line = &(line.unwrap());
+        let (_label, op, mut toks) = lookahead(line);
+        let instr = if let Ok(func) = op.parse::<MathFunc>() {
+            let a0 = toks.next().unwrap().parse().unwrap();
+            let a1 = toks.next().unwrap().parse().unwrap();
+            let a2 = toks.next().unwrap().parse().unwrap();
+            dbg!((func, a0, a1, a2));
+            Instruction::math(func, (a0, a1, a2))
+        } else if let Ok(op) = op.parse::<OpCode>() {
+            match op {
+                OpCode::ADDI | OpCode::LW | OpCode::SW | OpCode::BEQZ => {
+                    let a0 = toks.next().unwrap().parse().unwrap();
+                    let a1 = toks.next().unwrap().parse().unwrap();
+                    let imm = toks.next().unwrap();
+                    let imm = if let OpCode::BEQZ = op {
+                        imm.parse()
+                            .or_else(|_| {
+                                i16::try_from(labels[imm])
+                                    // TODO: correctly converting from usize to i16
+                                    .map(|addr| addr - (line_num as i16) * 4 - 4)
+                            })
+                            .unwrap()
+                    } else {
+                        parse_imm(imm, labels)
+                    };
+                    dbg!((op, a0, a1, imm));
+
+                    Instruction::i_type(op, (a0, a1, imm))
+                }
+                OpCode::JALR => {
+                    let offs_or_label = toks.next().unwrap();
+                    let offs = parse_imm(offs_or_label, labels);
+                    dbg!((op, offs));
+                    Instruction::jalr(offs)
+                }
+                OpCode::HALT => {
+                    dbg!(op);
+                    Instruction::halt()
+                }
+                OpCode::MATH => panic!("Should've already reached"),
+            }
+        } else if op == ".fill" {
+            let fill_num: i32 = toks.next().unwrap().parse().unwrap();
+            dbg!(fill_num);
+            unsafe { std::mem::transmute(fill_num) }
+        } else {
+            panic!("unrecognized opcode {} at line {}", op, line_num)
+        };
+        writeln!(output, "{}", instr)?;
+    }
+    Ok(())
+}
+
+fn parse_imm(imm: &str, labels: &Labels) -> i16 {
+    imm.parse().or_else(|_| i16::try_from(labels[imm])).unwrap()
 }
