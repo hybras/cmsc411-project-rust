@@ -62,7 +62,7 @@ fn get_labels(input: &File) -> Labels {
         .collect()
 }
 
-fn lookahead(line: &str) -> (&str, &str, impl Iterator<Item = &str>) {
+fn parse_label_opcode(line: &str) -> (&str, &str, impl Iterator<Item = &str>) {
     let mut toks = line.split("\t");
     (toks.next().unwrap(), toks.next().unwrap(), toks)
 }
@@ -71,7 +71,7 @@ fn write_instructions(input: &File, output: &mut BufWriter<File>, labels: &Label
     let input = BufReader::new(input);
     for (line_num, line) in input.lines().enumerate() {
         let line = &(line.unwrap());
-        let (_label, op, mut toks) = lookahead(line);
+        let (_label, op, mut toks) = parse_label_opcode(line);
         let instr = if let Ok(func) = op.parse::<MathFunc>() {
             let a0 = toks.next().unwrap().parse().unwrap();
             let a1 = toks.next().unwrap().parse().unwrap();
@@ -116,7 +116,7 @@ fn write_instructions(input: &File, output: &mut BufWriter<File>, labels: &Label
             dbg!(fill_num);
             unsafe { std::mem::transmute(fill_num) }
         } else {
-            panic!("unrecognized opcode {} at line {}", op, line_num)
+            panic!("unrecognized opcode {} at line {}", op, line_num + 1)
         };
         writeln!(output, "{}", instr)?;
     }
