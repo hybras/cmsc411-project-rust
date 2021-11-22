@@ -1,23 +1,34 @@
-pub const OP_SHIFT: u32 = 26;
-pub const A_SHIFT: u32 = 21;
-pub const B_SHIFT: u32 = 16;
-pub const D_SHIFT: u32 = 11;
+//! The fields of the instruction types are in reverse order
 
-#[derive(Debug)]
+use std::{fmt::Display, mem::transmute};
+
+use modular_bitfield::{
+    bitfield,
+    prelude::{B16, B26, B5},
+    BitfieldSpecifier,
+};
+use strum_macros::EnumString;
+
+#[derive(BitfieldSpecifier, EnumString, Clone, Copy, Debug)]
+#[strum(serialize_all = "lowercase")]
+#[bits = 6]
 #[repr(u8)]
-enum OpCode {
+pub enum OpCode {
     LW = 0x23,
     SW = 0x2B,
     ADDI = 0x8,
     /// ADD, SLL, SRL, SUB, AND, ADD
-    MATH = 0x0,
-    BEQZ = 0x4,
+    MATH = 0x00,
+    BEQZ = 0x04,
     JALR = 0x13,
     HALT = 0x3F,
 }
 
+#[derive(Debug, BitfieldSpecifier, EnumString, Clone, Copy)]
+#[strum(serialize_all = "lowercase")]
+#[bits = 6]
 #[repr(u8)]
-enum MathFunc {
+pub enum MathFunc {
     ADD = 0x20,
     SLL = 0x4,
     SRL = 0x6,
@@ -25,37 +36,102 @@ enum MathFunc {
     AND = 0x24,
     OR = 0x25,
 }
-
-// This is the only encode instruction w/o type safety. All of the others use appropriate integers types to ensure values are in range
-fn encode_r_instr(op: OpCode, args: (u32, u32, u32)) -> u32 {
-    let op = op as u32;
-    (op << OP_SHIFT) | (args.1 << A_SHIFT) | (args.2 << B_SHIFT) | (args.0 << D_SHIFT)
+#[bitfield]
+#[derive(Clone, Copy)]
+pub struct RTypeInstruction {
+    #[bits = 6]
+    func: MathFunc,
+    /// shamt isn't used in this implementation
+    shamt: B5,
+    rd: B5,
+    rt: B5,
+    rs: B5,
+    #[bits = 6]
+    opcode: OpCode,
 }
 
-fn encode_math_instr(func: MathFunc, args: (u8, u8, u8)) -> u32 {
-    let op = OpCode::MATH;
-    let func = func as u32;
-    encode_r_instr(op, (args.0 as u32, args.1 as u32, args.2 as u32)) | func
+#[bitfield]
+#[derive(Clone, Copy)]
+pub struct ITypeInstruction {
+    imm: B16,
+    rt: B5,
+    rs: B5,
+    #[bits = 6]
+    opcode: OpCode,
 }
 
-fn encode_jalr(address: u16) -> u32 {
-    encode_r_instr(OpCode::JALR, (0, address as u32, 0))
+#[bitfield]
+#[derive(Clone, Copy)]
+pub struct JTypeInstruction {
+    offset: B26,
+    #[bits = 6]
+    opcode: OpCode,
 }
 
-fn encode_halt() -> u32 {
-    encode_r_instr(OpCode::HALT, (0, 0, 0))
+#[derive(Clone, Copy)]
+pub union Instruction {
+    i: ITypeInstruction,
+    j: JTypeInstruction,
+    r: RTypeInstruction,
 }
 
-fn encode_i_instr(op: OpCode, args: (u8, u8, i16)) -> u32 {
-    debug_assert!(
-        matches!(op, OpCode::ADDI | OpCode::BEQZ | OpCode::LW | OpCode::SW),
-        "Op code {:?} is not ADDI | BEQZ | LW | SW", op
-    );
-    let imm = args.2 as u32;
-    let op = op as u32;
-    op | ((args.1 as u32) << A_SHIFT) | ((args.0 as u32) << B_SHIFT) | imm
+impl Display for Instruction {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let bits: u32 = unsafe { transmute(*self) };
+        // let bits = bits.reverse_bits();
+        write!(f, "{:08x}", bits)
+    }
 }
 
-fn encode_fill(imm: u32) -> u32 {
-    imm
+impl Instruction {
+    pub fn opcode(&self) -> OpCode {
+        unsafe { self.j }.opcode()
+    }
+
+    pub fn fill(imm: u32) -> u32 {
+        imm
+    }
+
+    pub fn jalr(offset: i16) -> Self {
+        Self {
+            j: JTypeInstruction::new()
+                .with_opcode(OpCode::JALR)
+                .with_offset(offset as u32),
+        }
+    }
+
+    pub fn halt() -> Self {
+        Self {
+            j: JTypeInstruction::new().with_opcode(OpCode::HALT),
+        }
+    }
+
+    pub fn math(func: MathFunc, args: (u8, u8, u8)) -> Self {
+        // TODO: Check order of registers / args
+        Self {
+            r: RTypeInstruction::new()
+                .with_opcode(OpCode::MATH)
+                .with_func(func)
+                .with_rs(args.1)
+                .with_rt(args.2)
+                .with_rd(args.0),
+        }
+    }
+
+    pub fn i_type(op: OpCode, args: (u8, u8, i16)) -> Self {
+        debug_assert!(
+            matches!(op, OpCode::ADDI | OpCode::BEQZ | OpCode::LW | OpCode::SW),
+            "Op code {:?} is not ADDI | BEQZ | LW | SW",
+            op
+        );
+
+        // TODO: Check order of registers / args
+        Self {
+            i: ITypeInstruction::new()
+                .with_opcode(op)
+                .with_rt(args.0)
+                .with_rs(args.1)
+                .with_imm(args.2 as u16),
+        }
+    }
 }
