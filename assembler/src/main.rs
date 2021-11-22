@@ -1,5 +1,4 @@
-pub mod instr;
-use crate::instr::Instruction;
+use assembler::instr::{Instruction, MathFunc, OpCode};
 
 use std::convert::TryFrom;
 use std::{
@@ -11,7 +10,6 @@ use std::{
 
 use anyhow::Result;
 use argh::FromArgs;
-use instr::{MathFunc, OpCode};
 
 /// error: usage: %s <assembly-code-file> <machine-code-file>
 #[derive(FromArgs)]
