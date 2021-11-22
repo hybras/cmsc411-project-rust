@@ -107,7 +107,6 @@ impl Instruction {
     }
 
     pub fn math(func: MathFunc, args: (u8, u8, u8)) -> Self {
-        // TODO: Check order of registers / args
         Self {
             r: RTypeInstruction::new()
                 .with_opcode(OpCode::MATH)
@@ -125,7 +124,6 @@ impl Instruction {
             op
         );
 
-        // TODO: Check order of registers / args
         Self {
             i: ITypeInstruction::new()
                 .with_opcode(op)
