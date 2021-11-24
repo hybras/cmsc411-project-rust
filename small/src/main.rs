@@ -45,20 +45,20 @@ fn run<const REGS: usize>(state: &mut State<REGS>) -> Result<()> {
 
             OpCode::LW | OpCode::SW | OpCode::ADDI | OpCode::BEQZ => {
                 let instr = instr.as_i()?;
-                // Note the mapping between rt/rs and 0/1
-                let reg0 = instr.rt() as usize;
-                let reg1 = instr.rs() as usize;
+                // TODO Note the mapping between rt/rs and 0/1
+                let reg0 = instr.rs() as usize;
+                let reg1 = instr.rt() as usize;
                 let imm = convert_num(instr.imm() as i16);
                 match instr.opcode() {
                     OpCode::LW => {
-                        state.registers[reg0 as usize] =
-                            state.memory[(state.registers[reg1] + imm) as usize >> 2]
+                        state.registers[reg1] =
+                            state.memory[(state.registers[reg0] + imm) as usize >> 2]
                     }
                     OpCode::SW => {
-                        state.memory[(state.registers[reg1] + imm) as usize >> 2] =
-                            state.registers[reg0]
+                        state.memory[(state.registers[reg0] + imm) as usize >> 2] =
+                            state.registers[reg1]
                     }
-                    OpCode::ADDI => state.registers[reg0] = state.registers[reg1] + imm, // i flipped the regs from the c version
+                    OpCode::ADDI => state.registers[reg1] = state.registers[reg0] + imm,
                     OpCode::BEQZ => {
                         if state.registers[reg0] == 0 {
                             state.program_counter += imm as usize;
