@@ -68,11 +68,10 @@ fn run<const REGS: usize>(state: &mut State<REGS>) -> Result<()> {
             OpCode::JALR => unimplemented!(),
             OpCode::NOP => {}
             OpCode::HALT => {
-                state.num_executed_instructions += 1;
                 println!("machine halted");
                 println!(
                     "total of {} instructions executed",
-                    state.num_executed_instructions
+                    state.num_executed_instructions + 1 // halt counts as an instruction but doesn't add to the count
                 );
                 println!("{}", state);
                 break;
