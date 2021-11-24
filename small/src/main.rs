@@ -12,8 +12,6 @@ fn main() -> Result<()> {
     let mem = BufReader::new(file);
     let mut state: State<32> = State::with_memory(mem);
 
-    println!("{}", state);
-
     run(&mut state)?;
 
     Ok(())

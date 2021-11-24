@@ -12,12 +12,15 @@ impl<const NUM_REGS: usize> State<NUM_REGS> {
     pub fn with_memory(memory: impl BufRead) -> Self {
         let memory = memory
             .lines()
-            .map(|line| {
+            .enumerate()
+            .map(|(idx, line)| {
                 let line = line.unwrap();
                 let bits: u32 = u32::from_str_radix(&line, 16).unwrap();
+                println!("memory[{}]={:08x}", idx, bits);
                 bits
             })
             .collect();
+        println!();
         Self {
             memory,
             ..Default::default()
@@ -51,7 +54,6 @@ impl<const NUM_REGS: usize> Display for State<NUM_REGS> {
             writeln!(f, "\t\treg[{}] 0x{:x}\t({})", key, val, *val as i32)?;
         }
 
-        writeln!(f)?;
         Ok(())
     }
 }
