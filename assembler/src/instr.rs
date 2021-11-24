@@ -40,39 +40,39 @@ pub enum MathFunc {
 #[derive(Clone, Copy)]
 pub struct RTypeInstruction {
     #[bits = 6]
-    func: MathFunc,
+    pub func: MathFunc,
     /// shamt isn't used in this implementation
-    shamt: B5,
-    rd: B5,
-    rt: B5,
-    rs: B5,
+    pub shamt: B5,
+    pub rd: B5,
+    pub rt: B5,
+    pub rs: B5,
     #[bits = 6]
-    opcode: OpCode,
+    pub opcode: OpCode,
 }
 
 #[bitfield]
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, PartialEq, Eq)]
 pub struct ITypeInstruction {
-    imm: B16,
-    rt: B5,
-    rs: B5,
+    pub imm: B16,
+    pub rt: B5,
+    pub rs: B5,
     #[bits = 6]
-    opcode: OpCode,
+    pub opcode: OpCode,
 }
 
 #[bitfield]
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, PartialEq, Eq)]
 pub struct JTypeInstruction {
-    offset: B26,
+    pub offset: B26,
     #[bits = 6]
-    opcode: OpCode,
+    pub opcode: OpCode,
 }
 
 #[derive(Clone, Copy)]
 pub union Instruction {
-    i: ITypeInstruction,
-    j: JTypeInstruction,
-    r: RTypeInstruction,
+    pub i: ITypeInstruction,
+    pub j: JTypeInstruction,
+    pub r: RTypeInstruction,
 }
 
 impl From<u32> for Instruction {
