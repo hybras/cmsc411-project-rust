@@ -59,7 +59,8 @@ fn run<const REGS: usize>(state: &mut State<REGS>) -> Result<()> {
                     OpCode::ADDI => state.registers[reg1] = state.registers[reg0] + imm,
                     OpCode::BEQZ => {
                         if state.registers[reg0] == 0 {
-                            state.program_counter += imm as usize;
+                            state.program_counter =
+                                (state.program_counter as u32).wrapping_add(imm) as usize;
                         }
                     }
                     _ => unreachable!(),
