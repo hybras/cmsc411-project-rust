@@ -25,7 +25,6 @@ fn run<const REGS: usize>(state: &mut State<REGS>) -> Result<()> {
         // TODO mem needs to be byte addressable
         let instr: Instruction = state.memory[state.program_counter / 4].into();
         state.program_counter += 4;
-        state.num_executed_instructions += 1;
 
         match dbg!(instr.opcode()) {
             OpCode::MATH => {
@@ -71,6 +70,7 @@ fn run<const REGS: usize>(state: &mut State<REGS>) -> Result<()> {
             OpCode::JALR => unimplemented!(),
             OpCode::NOP => {}
             OpCode::HALT => {
+                state.num_executed_instructions += 1;
                 println!("machine halted");
                 println!(
                     "total of {} instructions executed",
@@ -84,6 +84,7 @@ fn run<const REGS: usize>(state: &mut State<REGS>) -> Result<()> {
         // r0 must always be 0. restore it if a rogue instruction modified it
         state.registers[0] = 0;
         println!("{}", state);
+        state.num_executed_instructions += 1;
     }
 
     Ok(())
