@@ -1,14 +1,16 @@
 //! The fields of the instruction types are in reverse order
 
+use std::fmt::Display;
+
 use anyhow::{anyhow, Result};
 use modular_bitfield::{
     bitfield,
     prelude::{B16, B26, B5},
     BitfieldSpecifier,
 };
-use strum_macros::EnumString;
+use strum_macros::{Display, EnumString};
 
-#[derive(BitfieldSpecifier, EnumString, Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(BitfieldSpecifier, EnumString, Display, Clone, Copy, Debug, PartialEq, Eq)]
 #[strum(serialize_all = "lowercase")]
 #[bits = 6]
 #[repr(u8)]
@@ -41,6 +43,7 @@ pub enum InstructionType {
     I,
     R,
 }
+
 #[bitfield]
 #[derive(Clone, Copy)]
 pub struct RTypeInstruction {
@@ -55,6 +58,19 @@ pub struct RTypeInstruction {
     pub opcode: OpCode,
 }
 
+impl Display for RTypeInstruction {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        writeln!(
+            f,
+            "{} {} {} {}",
+            self.opcode(),
+            self.rd(),
+            self.rs(),
+            self.rt()
+        )
+    }
+}
+
 #[bitfield]
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub struct ITypeInstruction {
@@ -65,12 +81,35 @@ pub struct ITypeInstruction {
     pub opcode: OpCode,
 }
 
+impl Display for ITypeInstruction {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        writeln!(
+            f,
+            "{} {} {} {}",
+            self.opcode(),
+            self.rs(),
+            self.rt(),
+            self.imm()
+        )
+    }
+}
+
 #[bitfield]
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub struct JTypeInstruction {
     pub offset: B26,
     #[bits = 6]
     pub opcode: OpCode,
+}
+
+impl Display for JTypeInstruction {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        writeln!(f, "{}", self.opcode())?;
+        if let OpCode::JALR = self.opcode() {
+            writeln!(f, " {}", self.offset())?;
+        }
+        Ok(())
+    }
 }
 
 #[derive(Clone, Copy)]
@@ -89,6 +128,16 @@ impl From<u32> for Instruction {
 impl From<Instruction> for u32 {
     fn from(bits: Instruction) -> Self {
         unsafe { std::mem::transmute(bits) }
+    }
+}
+
+impl Display for Instruction {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self.instr_type() {
+            InstructionType::J => self.as_j().unwrap().fmt(f),
+            InstructionType::I => self.as_i().unwrap().fmt(f),
+            InstructionType::R => self.as_r().unwrap().fmt(f),
+        }
     }
 }
 
