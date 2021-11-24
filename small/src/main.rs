@@ -94,13 +94,3 @@ pub fn convert_num(num: u16) -> u32 {
     // pads the i16 with zeroes. if negative, pads it with 1's instead
     i32::from(num as i16) as u32
 }
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_convert() {
-        let conv = convert_num(u16::MAX);
-        println!("{:x}", conv);
-    }
-}
