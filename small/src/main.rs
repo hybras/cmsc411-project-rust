@@ -21,7 +21,7 @@ fn main() -> Result<()> {
 
 fn run<const REGS: usize>(state: &mut State<REGS>) -> Result<()> {
     loop {
-        use std::ops::{Add, BitAnd, BitOr, Shl, Shr, Sub};
+        use std::ops::{BitAnd, BitOr, Shl, Shr};
         // TODO mem needs to be byte addressable
         let instr: Instruction = state.memory[state.program_counter / 4].into();
         state.program_counter += 4;
@@ -30,10 +30,10 @@ fn run<const REGS: usize>(state: &mut State<REGS>) -> Result<()> {
             OpCode::MATH => {
                 let instr = instr.as_r()?;
                 let fun: fn(u32, u32) -> u32 = match instr.func() {
-                    MathFunc::ADD => Add::add,
+                    MathFunc::ADD => u32::wrapping_add,
+                    MathFunc::SUB => u32::wrapping_sub,
                     MathFunc::SLL => Shl::shl,
                     MathFunc::SRL => Shr::shr,
-                    MathFunc::SUB => Sub::sub,
                     MathFunc::AND => BitAnd::bitand,
                     MathFunc::OR => BitOr::bitor,
                 };
