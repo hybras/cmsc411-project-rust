@@ -51,7 +51,7 @@ fn get_labels(input: &File) -> Labels {
             if is_labeled {
                 Some((
                     line.split_once("\t").unwrap().0.to_owned(),
-                    (line_num * 4) as u16,
+                    (line_num * 4) as u16, // narrowing conversion
                 ))
             } else {
                 None
@@ -86,7 +86,6 @@ fn write_instructions(input: &File, output: &mut BufWriter<File>, labels: &Label
                         imm.parse()
                             .or_else(|_| {
                                 i16::try_from(labels[imm])
-                                    // TODO: correctly converting from usize to i16
                                     .map(|addr| addr - (line_num as i16) * 4 - 4)
                             })
                             .unwrap()
@@ -110,13 +109,14 @@ fn write_instructions(input: &File, output: &mut BufWriter<File>, labels: &Label
                 OpCode::MATH => panic!("Should've already reached"),
             }
         } else if op == ".fill" {
-            let fill_num: i32 = toks.next().unwrap().parse().unwrap();
-            dbg!(fill_num);
-            unsafe { std::mem::transmute(fill_num) }
+            let fill: i32 = toks.next().unwrap().parse().unwrap();
+            dbg!(fill);
+            (fill as u32).into()
         } else {
             panic!("unrecognized opcode {} at line {}", op, line_num + 1)
         };
-        writeln!(output, "{}", instr)?;
+        let instr = u32::from(instr);
+        writeln!(output, "{:x}", instr)?;
     }
     Ok(())
 }
