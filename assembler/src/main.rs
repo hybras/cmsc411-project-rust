@@ -106,7 +106,8 @@ fn write_instructions(input: &File, output: &mut BufWriter<File>, labels: &Label
                     dbg!(op);
                     Instruction::halt()
                 }
-                OpCode::MATH => panic!("Should've already reached"),
+                OpCode::NOP => Instruction::nop(),
+                OpCode::MATH => panic!("MATH is not a assembly instruction. Parsing was already handled for math instructions"),
             }
         } else if op == ".fill" {
             let fill: i32 = toks.next().unwrap().parse().unwrap();

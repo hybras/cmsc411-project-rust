@@ -23,6 +23,7 @@ pub enum OpCode {
     BEQZ = 0x04,
     JALR = 0x13,
     HALT = 0x3F,
+    NOP = 0x20,
 }
 
 #[derive(Debug, BitfieldSpecifier, EnumString, Clone, Copy, PartialEq, Eq)]
@@ -119,6 +120,12 @@ pub union Instruction {
     pub r: RTypeInstruction,
 }
 
+/// This is a garbage default implementation
+impl Default for Instruction {
+    fn default() -> Self {
+        Self::nop()
+    }
+}
 impl From<u32> for Instruction {
     fn from(bits: u32) -> Self {
         unsafe { std::mem::transmute(bits) }
@@ -152,7 +159,7 @@ impl Instruction {
         match self.opcode() {
             OpCode::LW | OpCode::SW | OpCode::ADDI | OpCode::BEQZ => I,
             OpCode::MATH => R,
-            OpCode::JALR | OpCode::HALT => J,
+            OpCode::JALR | OpCode::HALT | OpCode::NOP => J,
         }
     }
 
@@ -207,6 +214,12 @@ impl Instruction {
     pub fn halt() -> Self {
         Self {
             j: JTypeInstruction::new().with_opcode(OpCode::HALT),
+        }
+    }
+
+    pub fn nop() -> Self {
+        Self {
+            j: JTypeInstruction::new().with_opcode(OpCode::NOP),
         }
     }
 

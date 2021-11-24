@@ -69,6 +69,7 @@ fn run<const REGS: usize>(state: &mut State<REGS>) -> Result<()> {
                 }
             }
             OpCode::JALR => unimplemented!(),
+            OpCode::NOP => {}
             OpCode::HALT => {
                 println!("machine halted");
                 println!(
