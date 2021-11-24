@@ -1,7 +1,7 @@
 //! The fields of the instruction types are in reverse order
 
-use std::{fmt::Display, mem::transmute};
 
+use anyhow::{anyhow, Result};
 use modular_bitfield::{
     bitfield,
     prelude::{B16, B26, B5},
@@ -9,7 +9,7 @@ use modular_bitfield::{
 };
 use strum_macros::EnumString;
 
-#[derive(BitfieldSpecifier, EnumString, Clone, Copy, Debug)]
+#[derive(BitfieldSpecifier, EnumString, Clone, Copy, Debug, PartialEq, Eq)]
 #[strum(serialize_all = "lowercase")]
 #[bits = 6]
 #[repr(u8)]
@@ -17,14 +17,14 @@ pub enum OpCode {
     LW = 0x23,
     SW = 0x2B,
     ADDI = 0x8,
-    /// ADD, SLL, SRL, SUB, AND, ADD
+    /// ADD, SLL, SRL, SUB, AND, OR
     MATH = 0x00,
     BEQZ = 0x04,
     JALR = 0x13,
     HALT = 0x3F,
 }
 
-#[derive(Debug, BitfieldSpecifier, EnumString, Clone, Copy)]
+#[derive(Debug, BitfieldSpecifier, EnumString, Clone, Copy, PartialEq, Eq)]
 #[strum(serialize_all = "lowercase")]
 #[bits = 6]
 #[repr(u8)]
