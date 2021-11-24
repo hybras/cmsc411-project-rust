@@ -61,7 +61,7 @@ pub struct RTypeInstruction {
 
 impl Display for RTypeInstruction {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        writeln!(
+        write!(
             f,
             "{} {} {} {}",
             self.opcode(),
@@ -84,7 +84,7 @@ pub struct ITypeInstruction {
 
 impl Display for ITypeInstruction {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        writeln!(
+        write!(
             f,
             "{} {} {} {}",
             self.opcode(),
@@ -105,9 +105,9 @@ pub struct JTypeInstruction {
 
 impl Display for JTypeInstruction {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        writeln!(f, "{}", self.opcode())?;
+        write!(f, "{}", self.opcode())?;
         if let OpCode::JALR = self.opcode() {
-            writeln!(f, " {}", self.offset())?;
+            write!(f, " {}", self.offset())?;
         }
         Ok(())
     }
@@ -249,4 +249,13 @@ impl Instruction {
                 .with_imm(args.2 as u16),
         }
     }
+}
+
+#[test]
+fn test_nop_print() -> Result<()> {
+    use std::io::{Cursor, Write};
+    let mut c = Cursor::new(vec![0; 4]);
+    writeln!(c, "{}", Instruction::nop())?;
+    assert_eq!(&c.get_ref()[..], b"nop\n");
+    Ok(())
 }
