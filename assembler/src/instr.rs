@@ -75,17 +75,56 @@ pub union Instruction {
     r: RTypeInstruction,
 }
 
-impl Display for Instruction {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let bits: u32 = unsafe { transmute(*self) };
-        // let bits = bits.reverse_bits();
-        write!(f, "{:08x}", bits)
+impl From<u32> for Instruction {
+    fn from(bits: u32) -> Self {
+        unsafe { std::mem::transmute(bits) }
+    }
+}
+
+impl From<Instruction> for u32 {
+    fn from(bits: Instruction) -> Self {
+        unsafe { std::mem::transmute(bits) }
     }
 }
 
 impl Instruction {
     pub fn opcode(&self) -> OpCode {
         unsafe { self.j }.opcode()
+    }
+
+    unsafe fn as_i_unchecked(&self) -> &ITypeInstruction {
+        unsafe { &self.i }
+    }
+
+    unsafe fn as_j_unchecked(&self) -> &JTypeInstruction {
+        unsafe { &self.j }
+    }
+
+    unsafe fn as_r_unchecked(&self) -> &RTypeInstruction {
+        unsafe { &self.r }
+    }
+
+    pub fn as_i(&self) -> Result<&ITypeInstruction> {
+        match self.opcode() {
+            OpCode::LW | OpCode::SW | OpCode::ADDI | OpCode::BEQZ => {
+                Ok(unsafe { self.as_i_unchecked() })
+            }
+            _ => Err(anyhow!("Not a i type instruction")),
+        }
+    }
+
+    pub fn as_r(&self) -> Result<&RTypeInstruction> {
+        match self.opcode() {
+            OpCode::MATH => Ok(unsafe { self.as_r_unchecked() }),
+            _ => Err(anyhow!("Not a r type instruction")),
+        }
+    }
+
+    pub fn as_j(&self) -> Result<&JTypeInstruction> {
+        match self.opcode() {
+            OpCode::HALT | OpCode::JALR => Ok(unsafe { self.as_j_unchecked() }),
+            _ => Err(anyhow!("Not a j type instruction")),
+        }
     }
 
     pub fn fill(imm: u32) -> u32 {
