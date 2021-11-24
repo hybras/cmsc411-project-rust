@@ -46,7 +46,7 @@ fn run<const REGS: usize>(state: &mut State<REGS>) -> Result<()> {
                 // TODO Note the mapping between rt/rs and 0/1
                 let reg0 = instr.rs() as usize;
                 let reg1 = instr.rt() as usize;
-                let imm = convert_num(instr.imm());
+                let imm = sign_extend(instr.imm());
                 match instr.opcode() {
                     OpCode::LW => {
                         state.registers[reg1] =
@@ -89,7 +89,7 @@ fn run<const REGS: usize>(state: &mut State<REGS>) -> Result<()> {
 }
 
 /// converts an i16 to i32, but inputs and outputs unsigned ints
-pub fn convert_num(num: u16) -> u32 {
+pub fn sign_extend(num: u16) -> u32 {
     /* convert a 16 bit number into a 32-bit Sun number */
     // pads the i16 with zeroes. if negative, pads it with 1's instead
     i32::from(num as i16) as u32
