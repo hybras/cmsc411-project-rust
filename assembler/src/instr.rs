@@ -1,6 +1,5 @@
 //! The fields of the instruction types are in reverse order
 
-
 use anyhow::{anyhow, Result};
 use modular_bitfield::{
     bitfield,
@@ -35,6 +34,12 @@ pub enum MathFunc {
     SUB = 0x22,
     AND = 0x24,
     OR = 0x25,
+}
+
+pub enum InstructionType {
+    J,
+    I,
+    R,
 }
 #[bitfield]
 #[derive(Clone, Copy)]
@@ -92,6 +97,16 @@ impl Instruction {
         unsafe { self.j }.opcode()
     }
 
+    pub fn instr_type(&self) -> InstructionType {
+        use InstructionType::*;
+
+        match self.opcode() {
+            OpCode::LW | OpCode::SW | OpCode::ADDI | OpCode::BEQZ => I,
+            OpCode::MATH => R,
+            OpCode::JALR | OpCode::HALT => J,
+        }
+    }
+
     unsafe fn as_i_unchecked(&self) -> &ITypeInstruction {
         unsafe { &self.i }
     }
@@ -105,25 +120,26 @@ impl Instruction {
     }
 
     pub fn as_i(&self) -> Result<&ITypeInstruction> {
-        match self.opcode() {
-            OpCode::LW | OpCode::SW | OpCode::ADDI | OpCode::BEQZ => {
-                Ok(unsafe { self.as_i_unchecked() })
-            }
-            _ => Err(anyhow!("Not a i type instruction")),
+        if let InstructionType::I = self.instr_type() {
+            Ok(unsafe { self.as_i_unchecked() })
+        } else {
+            Err(anyhow!("Not a i type instruction"))
         }
     }
 
     pub fn as_r(&self) -> Result<&RTypeInstruction> {
-        match self.opcode() {
-            OpCode::MATH => Ok(unsafe { self.as_r_unchecked() }),
-            _ => Err(anyhow!("Not a r type instruction")),
+        if let InstructionType::R = self.instr_type() {
+            Ok(unsafe { self.as_r_unchecked() })
+        } else {
+            Err(anyhow!("Not a r type instruction"))
         }
     }
 
     pub fn as_j(&self) -> Result<&JTypeInstruction> {
-        match self.opcode() {
-            OpCode::HALT | OpCode::JALR => Ok(unsafe { self.as_j_unchecked() }),
-            _ => Err(anyhow!("Not a j type instruction")),
+        if let InstructionType::J = self.instr_type() {
+            Ok(unsafe { self.as_j_unchecked() })
+        } else {
+            Err(anyhow!("Not a j type instruction"))
         }
     }
 
