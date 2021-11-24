@@ -28,8 +28,8 @@ impl<const NUM_REGS: usize> State<NUM_REGS> {
 impl<const NUM_REGS: usize> Default for State<NUM_REGS> {
     fn default() -> Self {
         Self {
-            memory: Vec::with_capacity(10),
             registers: [0; NUM_REGS],
+            memory: Default::default(),
             program_counter: Default::default(),
             num_executed_instructions: Default::default(),
         }
