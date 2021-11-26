@@ -125,14 +125,17 @@ impl Default for Instruction {
     }
 }
 
+// TODO: Delete this
 impl From<u32> for Instruction {
     fn from(bits: u32) -> Self {
+        // SAFETY: This is not safe. the u32 may be an invalid value
         unsafe { std::mem::transmute(bits) }
     }
 }
 
 impl From<Instruction> for u32 {
     fn from(bits: Instruction) -> Self {
+        // SAFETY: u32 and Instruction have the same size and alignment, and the valid values of instruction are a subset of the valid values of u32.
         unsafe { std::mem::transmute(bits) }
     }
 }
@@ -149,6 +152,7 @@ impl Display for Instruction {
 
 impl Instruction {
     pub fn opcode(&self) -> OpCode {
+        // SAFETY: We are only reading opcode, which every instruction type should have in the same place. Any other bits are safely ignored as j.imm
         unsafe { self.j }.opcode()
     }
 
@@ -162,21 +166,10 @@ impl Instruction {
         }
     }
 
-    unsafe fn as_i_unchecked(&self) -> &ITypeInstruction {
-        unsafe { &self.i }
-    }
-
-    unsafe fn as_j_unchecked(&self) -> &JTypeInstruction {
-        unsafe { &self.j }
-    }
-
-    unsafe fn as_r_unchecked(&self) -> &RTypeInstruction {
-        unsafe { &self.r }
-    }
-
     pub fn as_i(&self) -> Result<&ITypeInstruction> {
         if let InstructionType::I = self.instr_type() {
-            Ok(unsafe { self.as_i_unchecked() })
+            // SAFETY: We just checked instruction type
+            Ok(unsafe { &self.i })
         } else {
             Err(anyhow!("Not a i type instruction"))
         }
@@ -184,7 +177,8 @@ impl Instruction {
 
     pub fn as_r(&self) -> Result<&RTypeInstruction> {
         if let InstructionType::R = self.instr_type() {
-            Ok(unsafe { self.as_r_unchecked() })
+            // SAFETY: We just checked instruction type
+            Ok(unsafe { &self.r })
         } else {
             Err(anyhow!("Not a r type instruction"))
         }
@@ -192,7 +186,8 @@ impl Instruction {
 
     pub fn as_j(&self) -> Result<&JTypeInstruction> {
         if let InstructionType::J = self.instr_type() {
-            Ok(unsafe { self.as_j_unchecked() })
+            // SAFETY: We just checked instruction type
+            Ok(unsafe { &self.j })
         } else {
             Err(anyhow!("Not a j type instruction"))
         }
