@@ -106,7 +106,6 @@ fn write_instructions(input: &File, output: &mut BufWriter<File>, labels: &Label
                     dbg!(op);
                     Instruction::halt()
                 }
-                OpCode::NOP => Instruction::nop(),
                 OpCode::MATH => panic!("MATH is not a assembly instruction. Parsing was already handled for math instructions"),
             }
         } else if op == ".fill" {

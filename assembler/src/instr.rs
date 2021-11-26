@@ -23,7 +23,6 @@ pub enum OpCode {
     BEQZ = 0x04,
     JALR = 0x13,
     HALT = 0x3F,
-    NOP = 0x20,
 }
 
 #[derive(Debug, BitfieldSpecifier, EnumString, Clone, Copy, PartialEq, Eq)]
@@ -120,7 +119,6 @@ pub union Instruction {
     pub r: RTypeInstruction,
 }
 
-/// This is a garbage default implementation
 impl Default for Instruction {
     fn default() -> Self {
         Self::nop()
@@ -159,7 +157,7 @@ impl Instruction {
         match self.opcode() {
             OpCode::LW | OpCode::SW | OpCode::ADDI | OpCode::BEQZ => I,
             OpCode::MATH => R,
-            OpCode::JALR | OpCode::HALT | OpCode::NOP => J,
+            OpCode::JALR | OpCode::HALT => J,
         }
     }
 
@@ -218,9 +216,7 @@ impl Instruction {
     }
 
     pub fn nop() -> Self {
-        Self {
-            j: JTypeInstruction::new().with_opcode(OpCode::NOP),
-        }
+        Instruction::math(MathFunc::ADD, (0, 0, 0))
     }
 
     pub fn math(func: MathFunc, args: (u8, u8, u8)) -> Self {
