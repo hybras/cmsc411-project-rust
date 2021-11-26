@@ -44,13 +44,13 @@ fn get_labels(input: &File) -> Labels {
     let input = BufReader::new(input);
     input
         .lines()
+        .map(|it| it.unwrap())
         .enumerate()
         .filter_map(|(line_num, line)| {
-            let line = line.unwrap();
-            let is_labeled = !line.starts_with("\t");
-            if is_labeled {
+            let (label, _opcode, _toks) = parse_label_opcode(&line);
+            if label != "" {
                 Some((
-                    line.split_once("\t").unwrap().0.to_owned(),
+                    label.to_owned(),
                     (line_num * 4) as u16, // narrowing conversion
                 ))
             } else {
