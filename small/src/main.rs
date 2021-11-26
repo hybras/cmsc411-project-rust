@@ -10,14 +10,14 @@ fn main() -> Result<()> {
     let file = args().nth(1).context("Bad cli args")?;
     let file = File::open(file)?;
     let mem = BufReader::new(file);
-    let mut state: State<32> = State::with_memory(mem);
+    let mut state: State = State::with_memory(mem);
 
     run(&mut state)?;
 
     Ok(())
 }
 
-fn run<const REGS: usize>(state: &mut State<REGS>) -> Result<()> {
+fn run(state: &mut State) -> Result<()> {
     loop {
         use std::ops::{BitAnd, BitOr, Shl, Shr};
         // TODO mem needs to be byte addressable

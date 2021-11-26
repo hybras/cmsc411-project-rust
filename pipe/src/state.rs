@@ -2,12 +2,12 @@ use std::{fmt::Display, io::BufRead};
 
 use assembler::instr::Instruction;
 
-#[derive(Clone)]
-pub struct State<const NUM_REGS: usize> {
+#[derive(Clone, Default)]
+pub struct State {
     pub inst_memory: Vec<u32>,
     /// Memory *should* be byte addressable, but in the tests loads and stores are always word aligned
     pub data_memory: Vec<u32>,
-    pub registers: [u32; NUM_REGS],
+    pub registers: [u32; 32],
     pub program_counter: usize,
     pub instructions_count: usize,
 
@@ -19,24 +19,7 @@ pub struct State<const NUM_REGS: usize> {
     pub wrt_end: WriteEnd,
 }
 
-impl<const NUM_REGS: usize> Default for State<NUM_REGS> {
-    fn default() -> Self {
-        Self {
-            registers: [0; NUM_REGS],
-            data_memory: Default::default(),
-            inst_memory: Default::default(),
-            program_counter: Default::default(),
-            instructions_count: Default::default(),
-            fet_dec: Default::default(),
-            dec_exc: Default::default(),
-            exc_mem: Default::default(),
-            mem_wrt: Default::default(),
-            wrt_end: Default::default(),
-        }
-    }
-}
-
-impl<const NUM_REGS: usize> State<NUM_REGS> {
+impl State {
     pub fn with_memory(memory: impl BufRead) -> Self {
         let data_memory: Vec<u32> = memory
             .lines()
@@ -66,7 +49,7 @@ impl<const NUM_REGS: usize> State<NUM_REGS> {
     }
 }
 
-impl<const NUM_REGS: usize> Display for State<NUM_REGS> {
+impl Display for State {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         writeln!(
             f,

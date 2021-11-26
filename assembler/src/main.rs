@@ -116,7 +116,7 @@ fn write_instructions(input: &File, output: &mut BufWriter<File>, labels: &Label
             panic!("unrecognized opcode {} at line {}", op, line_num + 1)
         };
         let instr = u32::from(instr);
-        writeln!(output, "{:x}", instr)?;
+        writeln!(output, "{:08x}", instr)?;
     }
     Ok(())
 }
