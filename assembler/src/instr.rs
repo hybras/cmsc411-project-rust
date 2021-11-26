@@ -58,6 +58,21 @@ pub struct RTypeInstruction {
     pub opcode: OpCode,
 }
 
+impl RTypeInstruction {
+    pub fn nop() -> Self {
+        Self::math(MathFunc::ADD, (0, 0, 0))
+    }
+
+    pub fn math(func: MathFunc, args: (u8, u8, u8)) -> Self {
+        Self::new()
+            .with_opcode(OpCode::MATH)
+            .with_func(func)
+            .with_rs(args.1)
+            .with_rt(args.2)
+            .with_rd(args.0)
+    }
+}
+
 impl Display for RTypeInstruction {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
@@ -112,6 +127,18 @@ impl Display for JTypeInstruction {
     }
 }
 
+impl JTypeInstruction {
+    pub fn jalr(offset: i16) -> Self {
+        Self::new()
+            .with_opcode(OpCode::JALR)
+            .with_offset(offset as u32) // TODO is this the right conversion?
+    }
+
+    pub fn halt() -> Self {
+        Self::new().with_opcode(OpCode::HALT)
+    }
+}
+
 #[derive(Clone, Copy)]
 pub union Instruction {
     pub i: ITypeInstruction,
@@ -128,7 +155,7 @@ impl Default for Instruction {
 // TODO: Delete this
 impl From<u32> for Instruction {
     fn from(bits: u32) -> Self {
-        // SAFETY: This is not safe. the u32 may be an invalid value
+        // SAFETY: This is not safe. the u32 may be an invalid value. We need to check that the opcode is valid and (if an r type instruction that func is valid )
         unsafe { std::mem::transmute(bits) }
     }
 }
@@ -147,6 +174,24 @@ impl Display for Instruction {
             InstructionType::I => self.as_i().unwrap().fmt(f),
             InstructionType::R => self.as_r().unwrap().fmt(f),
         }
+    }
+}
+
+impl From<ITypeInstruction> for Instruction {
+    fn from(i: ITypeInstruction) -> Self {
+        Self { i }
+    }
+}
+
+impl From<JTypeInstruction> for Instruction {
+    fn from(j: JTypeInstruction) -> Self {
+        Self { j }
+    }
+}
+
+impl From<RTypeInstruction> for Instruction {
+    fn from(r: RTypeInstruction) -> Self {
+        Self { r }
     }
 }
 
@@ -199,31 +244,20 @@ impl Instruction {
 
     pub fn jalr(offset: i16) -> Self {
         Self {
-            j: JTypeInstruction::new()
-                .with_opcode(OpCode::JALR)
-                .with_offset(offset as u32),
+            j: JTypeInstruction::jalr(offset),
         }
     }
 
     pub fn halt() -> Self {
-        Self {
-            j: JTypeInstruction::new().with_opcode(OpCode::HALT),
-        }
+        JTypeInstruction::halt().into()
     }
 
     pub fn nop() -> Self {
-        Instruction::math(MathFunc::ADD, (0, 0, 0))
+        RTypeInstruction::nop().into()
     }
 
     pub fn math(func: MathFunc, args: (u8, u8, u8)) -> Self {
-        Self {
-            r: RTypeInstruction::new()
-                .with_opcode(OpCode::MATH)
-                .with_func(func)
-                .with_rs(args.1)
-                .with_rt(args.2)
-                .with_rd(args.0),
-        }
+        RTypeInstruction::math(func, args).into()
     }
 
     pub fn i_type(op: OpCode, args: (u8, u8, i16)) -> Self {
@@ -233,13 +267,12 @@ impl Instruction {
             op
         );
 
-        Self {
-            i: ITypeInstruction::new()
-                .with_opcode(op)
-                .with_rt(args.0)
-                .with_rs(args.1)
-                .with_imm(args.2 as u16),
-        }
+        ITypeInstruction::new()
+            .with_opcode(op)
+            .with_rt(args.0)
+            .with_rs(args.1)
+            .with_imm(args.2 as u16)
+            .into()
     }
 }
 
