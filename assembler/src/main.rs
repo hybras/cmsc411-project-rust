@@ -61,7 +61,7 @@ fn get_labels(input: &File) -> Labels {
 }
 
 fn parse_label_opcode(line: &str) -> (&str, &str, impl Iterator<Item = &str>) {
-    let mut toks = line.split("\t");
+    let mut toks = line.split('\t');
     (toks.next().unwrap(), toks.next().unwrap(), toks)
 }
 
