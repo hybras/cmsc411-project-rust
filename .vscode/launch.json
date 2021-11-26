@@ -94,7 +94,7 @@
                     "kind": "bin"
                 }
             },
-            "args": ["../project/public_tests/publicBasic.asm"],
+            "args": ["./tests/ppublic$TEST.asm"], // INSERT TEST NAME HERE
             "cwd": "${workspaceFolder}"
         },
         {
