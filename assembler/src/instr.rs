@@ -124,6 +124,7 @@ impl Default for Instruction {
         Self::nop()
     }
 }
+
 impl From<u32> for Instruction {
     fn from(bits: u32) -> Self {
         unsafe { std::mem::transmute(bits) }
