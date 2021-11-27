@@ -34,7 +34,7 @@ fn main() -> Result<()> {
     let mut output = BufWriter::new(output);
 
     // First Pass
-    let labels = dbg!(get_labels(&input));
+    let labels = get_labels(&input);
     let input = File::open(&input_path)?;
     write_instructions(&input, &mut output, &labels)?;
     Ok(())
@@ -74,7 +74,6 @@ fn write_instructions(input: &File, output: &mut BufWriter<File>, labels: &Label
             let a0 = toks.next().unwrap().parse().unwrap();
             let a1 = toks.next().unwrap().parse().unwrap();
             let a2 = toks.next().unwrap().parse().unwrap();
-            dbg!((func, a0, a1, a2));
             Instruction::math(func, (a0, a1, a2))
         } else if let Ok(op) = op.parse::<OpCode>() {
             match op {
@@ -92,25 +91,21 @@ fn write_instructions(input: &File, output: &mut BufWriter<File>, labels: &Label
                     } else {
                         parse_imm(imm, labels)
                     };
-                    dbg!((op, a0, a1, imm));
 
                     Instruction::i_type(op, (a0, a1, imm))
                 }
                 OpCode::JALR => {
                     let offs_or_label = toks.next().unwrap();
                     let offs = parse_imm(offs_or_label, labels);
-                    dbg!((op, offs));
                     Instruction::jalr(offs)
                 }
                 OpCode::HALT => {
-                    dbg!(op);
                     Instruction::halt()
                 }
                 OpCode::MATH => panic!("MATH is not a assembly instruction. Parsing was already handled for math instructions"),
             }
         } else if op == ".fill" {
             let fill: i32 = toks.next().unwrap().parse().unwrap();
-            dbg!(fill);
             (fill as u32).into()
         } else {
             panic!("unrecognized opcode {} at line {}", op, line_num + 1)
