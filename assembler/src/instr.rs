@@ -60,7 +60,7 @@ pub enum InstructionType {
 }
 
 #[bitfield]
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, PartialEq, Eq)]
 pub struct RTypeInstruction {
     #[bits = 6]
     pub func: MathFunc,
@@ -109,6 +109,12 @@ pub struct ITypeInstruction {
     pub rs: B5,
     #[bits = 6]
     pub opcode: OpCode,
+}
+
+impl ITypeInstruction {
+    pub fn imm_as_i32(&self) -> i32 {
+        i32::from(self.imm() as i16)
+    }
 }
 
 impl Display for ITypeInstruction {
