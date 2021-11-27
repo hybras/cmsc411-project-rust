@@ -38,6 +38,21 @@ pub enum MathFunc {
     OR = 0x25,
 }
 
+// TODO impl Fn(u32, u32) -> u32
+impl MathFunc {
+    pub fn as_fn(&self) -> fn(u32, u32) -> u32 {
+        use std::ops::{BitAnd, BitOr, Shl, Shr};
+        match self {
+            MathFunc::ADD => u32::wrapping_add,
+            MathFunc::SUB => u32::wrapping_sub,
+            MathFunc::SLL => Shl::shl,
+            MathFunc::SRL => Shr::shr,
+            MathFunc::AND => BitAnd::bitand,
+            MathFunc::OR => BitOr::bitor,
+        }
+    }
+}
+
 pub enum InstructionType {
     J,
     I,
