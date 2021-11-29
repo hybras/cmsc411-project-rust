@@ -8,7 +8,7 @@ use modular_bitfield::{
     prelude::{B16, B26, B5},
     BitfieldSpecifier,
 };
-use strum_macros::{Display, EnumString};
+use strum_macros::{Display, EnumIter, EnumString};
 
 #[derive(BitfieldSpecifier, EnumString, Display, Clone, Copy, Debug, PartialEq, Eq)]
 #[strum(serialize_all = "lowercase")]
@@ -25,7 +25,7 @@ pub enum OpCode {
     HALT = 0x3F,
 }
 
-#[derive(Debug, BitfieldSpecifier, EnumString, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, BitfieldSpecifier, EnumString, EnumIter, Display, Clone, Copy, PartialEq, Eq)]
 #[strum(serialize_all = "lowercase")]
 #[bits = 6]
 #[repr(u8)]
@@ -229,6 +229,21 @@ impl Instruction {
             OpCode::LW | OpCode::SW | OpCode::ADDI | OpCode::BEQZ => I,
             OpCode::MATH => R,
             OpCode::JALR | OpCode::HALT => J,
+        }
+    }
+
+    pub fn as_data(&self) -> Result<u32> {
+        use strum::IntoEnumIterator;
+        let bits = u32::from(*self);
+        let func = (bits & 0x3F) as u8;
+        let opcode = (bits >> 26) as u8;
+        let func_is_invalid = MathFunc::iter()
+            .map(|it| it as u8)
+            .any(|fun| fun == func);
+        if opcode == (OpCode::MATH as u8) && func_is_invalid {
+            Ok(bits)
+        } else {
+            Err(anyhow!("Is in instruction, not data"))
         }
     }
 
