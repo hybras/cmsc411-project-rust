@@ -40,12 +40,7 @@ impl State {
 
         println!("\tinstruction memory:");
         for (key, &val) in inst_memory.iter().enumerate() {
-            if let Ok(val) = val.as_data() {
-                println!("\t\tinstrMem[ {} ] = data: {}", key, val)
-            } else {
-                // Panics if instruction is actually data.
-                println!("\t\tinstrMem[ {} ] = {}", key, val);
-            }
+            println!("\t\tinstrMem[ {} ] = {}", key, val);
         }
 
         Self {
@@ -81,19 +76,19 @@ impl Display for State {
         writeln!(f, "\tIDEX:")?;
         writeln!(f, "\t\tinstruction {}", self.dec_exc.instr)?;
         writeln!(f, "\t\tpcPlus1 {}", self.dec_exc.pc_next)?;
-        writeln!(f, "\t\treadRegA {}", self.dec_exc.read_reg_a)?;
-        writeln!(f, "\t\treadRegB {}", self.dec_exc.read_reg_b)?;
+        writeln!(f, "\t\treadRegA {}", self.dec_exc.read_reg_a as i32)?;
+        writeln!(f, "\t\treadRegB {}", self.dec_exc.read_reg_b as i32)?;
         writeln!(f, "\t\toffset {}", self.dec_exc.offset as i32)?;
         writeln!(f, "\tEXMEM:")?;
         writeln!(f, "\t\tinstruction {}", self.exc_mem.instr)?;
-        writeln!(f, "\t\taluResult {}", self.exc_mem.alu_result)?;
-        writeln!(f, "\t\treadRegB {}", self.exc_mem.read_reg)?;
+        writeln!(f, "\t\taluResult {}", self.exc_mem.alu_result as i32)?;
+        writeln!(f, "\t\treadRegB {}", self.exc_mem.read_reg as i32)?;
         writeln!(f, "\tMEMWB:")?;
         writeln!(f, "\t\tinstruction {}", self.mem_wrt.instr)?;
-        writeln!(f, "\t\twriteData {}", self.mem_wrt.write_data)?;
+        writeln!(f, "\t\twriteData {}", self.mem_wrt.write_data as i32)?;
         writeln!(f, "\tWBEND:")?;
         writeln!(f, "\t\tinstruction {}", self.wrt_end.instr)?;
-        writeln!(f, "\t\twriteData {}", self.wrt_end.write_data)?;
+        writeln!(f, "\t\twriteData {}", self.wrt_end.write_data as i32)?;
         Ok(())
     }
 }
