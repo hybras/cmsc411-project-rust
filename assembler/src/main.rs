@@ -48,7 +48,7 @@ fn get_labels(input: &File) -> Labels {
         .enumerate()
         .filter_map(|(line_num, line)| {
             let (label, _opcode, _toks) = parse_label_opcode(&line);
-            if label != "" {
+             if !label.is_empty() {
                 Some((
                     label.to_owned(),
                     (line_num * 4) as u16, // narrowing conversion
