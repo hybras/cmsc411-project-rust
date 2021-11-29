@@ -9,6 +9,6 @@ for test in "$tests"/public*.mips; do
     cargo run --quiet --package pipe --bin pipe -- "$tests/$name.asm" > "$tests/$name.out"
     expected="$tests/$name.output"
     if diff -q $expected "$tests/$name.out"; then
-        rm "$tests/$name.asm" $expected "$tests/$name.out"
+        rm "$tests/$name.asm" "$tests/$name.out"
     fi
 done
