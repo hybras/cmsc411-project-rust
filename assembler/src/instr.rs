@@ -123,8 +123,8 @@ impl Display for ITypeInstruction {
             f,
             "{} {} {} {}",
             self.opcode(),
-            self.rs(),
             self.rt(),
+            self.rs(),
             self.imm()
         )
     }
