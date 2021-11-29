@@ -38,7 +38,6 @@ pub enum MathFunc {
     OR = 0x25,
 }
 
-// TODO impl Fn(u32, u32) -> u32
 impl MathFunc {
     pub fn as_fn(&self) -> fn(u32, u32) -> u32 {
         use std::ops::{BitAnd, BitOr, Shl, Shr};
@@ -152,7 +151,8 @@ impl JTypeInstruction {
     pub fn jalr(offset: i16) -> Self {
         Self::new()
             .with_opcode(OpCode::JALR)
-            .with_offset(offset as u32) // TODO is this the right conversion?
+            // TODO is this the right conversion? It currently doesn't matter because j.offset() is never used
+            .with_offset(offset as u32)
     }
 
     pub fn halt() -> Self {
@@ -177,7 +177,10 @@ impl Default for Instruction {
 impl From<u32> for Instruction {
     fn from(bits: u32) -> Self {
         // SAFETY: This is not safe. the u32 may be an invalid value. We need to check that the opcode is valid and (if an r type instruction that func is valid )
-        unsafe { std::mem::transmute(bits) }
+        JTypeInstruction {
+            bytes: u32::to_le_bytes(bits),
+        }
+        .into()
     }
 }
 
@@ -314,11 +317,16 @@ impl Instruction {
     }
 }
 
-#[test]
-fn test_nop_print() -> Result<()> {
-    use std::io::{Cursor, Write};
-    let mut c = Cursor::new(vec![0; 4]);
-    writeln!(c, "{}", Instruction::nop())?;
-    assert_eq!(&c.get_ref()[..], b"nop\n");
-    Ok(())
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_nop_print() -> Result<()> {
+        use std::io::{Cursor, Write};
+        let mut c = Cursor::new(vec![0; 4]);
+        writeln!(c, "{}", Instruction::nop())?;
+        assert_eq!(&c.get_ref()[..], b"nop\n");
+        Ok(())
+    }
 }
