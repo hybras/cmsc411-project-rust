@@ -20,11 +20,10 @@ fn main() -> Result<()> {
 fn run(state: &mut State) -> Result<()> {
     loop {
         use std::ops::{BitAnd, BitOr, Shl, Shr};
-        // TODO mem needs to be byte addressable
         let instr: Instruction = state.memory[state.program_counter / 4].into();
         state.program_counter += 4;
 
-        match dbg!(instr.opcode()) {
+        match instr.opcode() {
             OpCode::MATH => {
                 let instr = instr.as_r()?;
                 let fun: fn(u32, u32) -> u32 = match instr.func() {
