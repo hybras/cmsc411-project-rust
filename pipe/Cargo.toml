@@ -8,3 +8,4 @@ edition = "2018"
 [dependencies]
 assembler = { path = "../assembler" }
 anyhow = "1.0"
+strum = "0.23"
