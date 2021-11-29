@@ -235,11 +235,9 @@ impl Instruction {
     pub fn as_data(&self) -> Result<u32> {
         use strum::IntoEnumIterator;
         let bits = u32::from(*self);
-        let func = (bits & 0x3F) as u8;
+        let func = (bits & 0x7FF) as u16;
         let opcode = (bits >> 26) as u8;
-        let func_is_invalid = MathFunc::iter()
-            .map(|it| it as u8)
-            .any(|fun| fun == func);
+        let func_is_invalid = !MathFunc::iter().map(|it| it as u16).any(|fun| fun == func);
         if opcode == (OpCode::MATH as u8) && func_is_invalid {
             Ok(bits)
         } else {
