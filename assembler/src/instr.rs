@@ -93,7 +93,7 @@ impl Display for RTypeInstruction {
         write!(
             f,
             "{} {} {} {}",
-            self.opcode(),
+            self.func(),
             self.rd(),
             self.rs(),
             self.rt()
