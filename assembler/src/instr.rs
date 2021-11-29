@@ -125,7 +125,7 @@ impl Display for ITypeInstruction {
             self.opcode(),
             self.rt(),
             self.rs(),
-            self.imm()
+            self.imm_as_i32()
         )
     }
 }
