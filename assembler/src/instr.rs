@@ -190,10 +190,14 @@ impl From<Instruction> for u32 {
 
 impl Display for Instruction {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self.instr_type() {
-            InstructionType::J => self.as_j().unwrap().fmt(f),
-            InstructionType::I => self.as_i().unwrap().fmt(f),
-            InstructionType::R => self.as_r().unwrap().fmt(f),
+        if let Ok(bits) = self.as_data() {
+            write!(f, "data: {}", bits)
+        } else {
+            match self.instr_type() {
+                InstructionType::J => self.as_j().unwrap().fmt(f),
+                InstructionType::I => self.as_i().unwrap().fmt(f),
+                InstructionType::R => self.as_r().unwrap().fmt(f),
+            }
         }
     }
 }
