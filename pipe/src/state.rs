@@ -78,7 +78,7 @@ impl Display for State {
         writeln!(f, "\t\tpcPlus1 {}", self.dec_exc.pc_next)?;
         writeln!(f, "\t\treadRegA {}", self.dec_exc.read_reg_a as i32)?;
         writeln!(f, "\t\treadRegB {}", self.dec_exc.read_reg_b as i32)?;
-        writeln!(f, "\t\toffset {}", self.dec_exc.offset as i32)?;
+        writeln!(f, "\t\toffset {}", self.dec_exc.offset)?;
         writeln!(f, "\tEXMEM:")?;
         writeln!(f, "\t\tinstruction {}", self.exc_mem.instr)?;
         writeln!(f, "\t\taluResult {}", self.exc_mem.alu_result as i32)?;
@@ -105,16 +105,20 @@ pub struct DecodeExecute {
     pub pc_next: usize,
     pub read_reg_a: u32,
     pub read_reg_b: u32,
-    pub offset: u32,
+    pub offset: i16,
 }
 
 impl DecodeExecute {
     pub fn nop() -> Self {
         Self {
             // SAFETY: ITypeInstructions are invalid iff. their opcode is invalid. But Instructions are guaranteed to have valid opcodes. Not using checked version because we're disregarding the opcode
-            offset: unsafe { Instruction::nop().i }.imm_as_i32() as u32, // offset = MathFunc::Add = 32,
+            offset: unsafe { Instruction::nop().i }.imm() as i16, // offset = MathFunc::Add = 32,
             ..Default::default()
         }
+    }
+
+    pub fn offset(&self) -> isize {
+        isize::from(self.offset)
     }
 }
 

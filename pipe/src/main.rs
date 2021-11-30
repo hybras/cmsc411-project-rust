@@ -100,7 +100,7 @@ fn decode(state: &State) -> (Option<(usize, FetchDecode)>, DecodeExecute) {
             // TODO forwarding here?
             read_reg_a: state.registers[i_instr.rs() as usize],
             read_reg_b: state.registers[i_instr.rt() as usize],
-            offset: i_instr.imm_as_i32() as u32,
+            offset: i_instr.imm() as i16,
         },
     );
 
@@ -215,10 +215,10 @@ fn execute(state: &State) -> (Option<(usize, FetchDecode, DecodeExecute)>, Execu
             )
         }
         OpCode::BEQZ => {
-            let offs = state.dec_exc.offset as i32;
+            let offs = state.dec_exc.offset();
             if (offs > 0 && read_reg_a == 0) || (offs < 0 && read_reg_a != 0) {
                 /* Incorrect branch prediction */
-                let program_counter = offs as u32 as usize + state.dec_exc.pc_next;
+                let program_counter = state.dec_exc.pc_next.wrapping_add(offs as usize);
 
                 /* Wipe out the previous stages in the pipeline */
 
