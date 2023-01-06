@@ -239,17 +239,28 @@ impl Instruction {
         }
     }
 
-    pub fn as_data(&self) -> Result<u32> {
-        use strum::IntoEnumIterator;
-        let bits = u32::from(*self);
-        let func = (bits & 0x7FF) as u16;
-        let opcode = (bits >> 26) as u8;
-        let func_is_invalid = !MathFunc::iter().map(|it| it as u16).any(|fun| fun == func);
-        if opcode == (OpCode::MATH as u8) && func_is_invalid {
-            Ok(bits)
-        } else {
-            Err(anyhow!("Is in instruction, not data"))
+    pub fn as_data(self) -> Result<u32, Self> {
+        let r = self.as_r();
+        match r {
+            Ok(r) => {
+                let func_is_invalid = r.func_or_err().is_err();
+                if func_is_invalid {
+                    Ok(self.as_u32())
+                } else {
+                    Err(self)
+                }
+            }
+            Err(_) => Err(self),
         }
+    }
+
+    pub fn as_u32(self) -> u32 {
+        let bytes = match self.instr_type() {
+            InstructionType::J => self.as_j().unwrap().into_bytes(),
+            InstructionType::I => self.as_i().unwrap().into_bytes(),
+            InstructionType::R => self.as_r().unwrap().into_bytes(),
+        };
+        u32::from_le_bytes(bytes)
     }
 
     pub fn as_i(&self) -> Result<&ITypeInstruction> {
