@@ -1,0 +1,18 @@
+= Pipelined Mips simulator
+
+This project contains the assembler and "small" (unpipelined) simulator given to students, rewritten in rust. It also provides a solution to the project (the implementation of the pipelined simulator).
+
+All public tests except "mult" pass. The difference is too small for me to care. Obviously, I haven't tested this against the private tests. My c submission of the project was only slightly related to the rust version, so I'm not sure if comparing implementations is ok. In its current state, this repository is only ~70% suitable as a project. Somethings will need to be restructured or rewritten. `pipe/src/sim.rs` will need to be turned into a skeleton, and should be the only file students should touch to finish the project.
+
+== Why a rewrite?
+
+The rewrite is significantly easier to read and understand. Doing it in rust also means a lot more stuff is either explicit, like integer conversions, field access, and which pipeline stages access which parts of the simulator state.
+
+Care has been taken to ensure the project is reasonably split between libraries and binaries, and that the output format matches the original c version of the project.
+
+== Notes
+
+* There is a conversion function from integers to the instruction type that is unsafe (could lead to UB or memory corruption).
+* halt happens in writeback, earlier stages will keep reading instructions that don't exist. this is a buffer overrun
+* There are a lot of explicit integer conversions and bitmasks that haven't been fully checked (the c version does them implicitly). Some have been replaced with library functions or encapsulated. Please leave them like that, the layout of data types nonsense is not the student's business.
+* There are endianess assumptions being made (I can't determine of the og project makes similar assumptions).
